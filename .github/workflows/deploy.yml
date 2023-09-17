@@ -20,7 +20,7 @@ jobs:
             - uses: actions/checkout@v3
             
             # install node.js
-            - uses: actions/setup-node@v1
+            - uses: actions/setup-node@v3
 
             # Runs a single command using the runners shell
             - name: install dependencies
