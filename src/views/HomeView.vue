@@ -8,7 +8,7 @@
             <div>您的ID: {{ peerid }}</div>
             <hr>
             <div class="input-group" style="margin-top: 1rem;">
-                <input class="roomname form-control" v-model="inputElement" placeholder=" 請輸入房間ID">
+                <input class="roomname form-control" v-model="inputElement" placeholder="請輸入房間ID">
                 <customButton style="--bor:0 4px 4px 0" @click="enterRoom">{{ inputElement==''?'創建房間':'加入房間' }}</customButton>
             </div>
         </div>
@@ -45,6 +45,9 @@ onMounted(()=>{
 })
 
 const enterRoom = ()=>{
+    if(peerid.value == '')
+        return;
+
     if(inputElement.value == ''){
         router.push({
             name: 'joinRoom',

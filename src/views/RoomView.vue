@@ -1,6 +1,10 @@
 <template>
     <div class="container">
-        <div class="tableContainer table-responsive">
+        <div>
+            <span style="color: green; display: flex; justify-content: center; font-size: 1.2rem;" v-show="tableData.drawAuthSwitch"><i class="material-icons">check</i> 目前可搶籤</span>
+            <span style="color: red; display: flex; justify-content: center; font-size: 1.2rem;" v-show="!tableData.drawAuthSwitch"><i class="material-icons">not_interested</i> 目前不可搶籤</span>
+        </div>
+        <div class="tableContainer table-responsive mt-1">
             <table class="table table-bordered">
                 <thead class="table-light">
                     <tr>
@@ -10,7 +14,7 @@
                 </thead>
                 <tbody>
                     <tr v-for="(item, index) in tableData.rowName" :key="index">
-                        <td class="table-light" role="textbox" @input="e => dataChange(index, -1, e)" :contenteditable="peer.id != roomOwnerId?false:true">{{ item }}</td>
+                        <td :class="`table-light ${peer.id != roomOwnerId?'drawButton':''}`" @click="draw(index)" role="textbox" @input="e => dataChange(index, -1, e)" :contenteditable="peer.id != roomOwnerId?false:true">{{ item }}</td>
                         <td v-for="(d, colIndex) in tableData.data[index]" :key="colIndex" @input="event => dataChange(index, colIndex, event)" role="textbox" :contenteditable="peer.id != roomOwnerId?false:true">{{ d }}</td>
                     </tr>
                 </tbody>
@@ -23,19 +27,22 @@
     <span class="functions">
         <span>
             <span><i class="material-icons" onclick="document.querySelector('.sidebar').classList.add('active');">settings</i></span>
-            <span><i class="material-icons">people</i></span>
-            <span data-toggle="tooltip" data-tooltip="允許填寫!" @click="e => {drawAuthSwitch.value = true;}"><i class="material-icons">check</i></span>
-            <span data-toggle="tooltip" data-tooltip="關閉填寫!" @click="e => {drawAuthSwitch.value = false;}"><i class="material-icons">not_interested</i></span>
+            <span class="peopleButton" :data-num="ids.length"><i class="material-icons">people</i></span>
+            <span data-toggle="tooltip" data-tooltip="允許填寫!" @click="drawAuthSwitchChange(true)"><i class="material-icons">check</i></span>
+            <span data-toggle="tooltip" data-tooltip="關閉填寫!" @click="drawAuthSwitchChange(false)"><i class="material-icons">not_interested</i></span>
         </span>
     </span>
+
+    <enterNameWindow v-show="peer.id != roomOwnerId && username == ''" @username="enterName"></enterNameWindow>
 
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import sideBar from '@/components/sideBar.vue';
+import enterNameWindow from '@/components/enterNameWindow.vue';
 
 const route = useRoute();
 const store = useStore();
@@ -43,6 +50,7 @@ const tableData =ref({
     rowName: ["項目1"],
     colName: ["名額1"],
     data: [["AA"]],
+    drawAuthSwitch: true,
 })
 
 console.log(route.params.id);
@@ -50,16 +58,18 @@ console.log(route.params.id);
 const sideBarElement = ref();
 const roomOwnerId = route.params.id;
 const peer = store.getters.getPeerjsObj;
-const drawAuthSwitch = ref(true);
-
+// const drawAuthSwitch = ref(true);
+const username = ref('');
 let interval;
 
-var ids = [];
+const ids = ref([]);
+const idAndNames = ref([]);
 var conns = [];
+var haveFiled = [];
 
 onMounted(()=>{
 
-    ids = [];
+    ids.value = [];
     conns = [];
 
     // setTimeout(()=>{
@@ -76,8 +86,13 @@ onMounted(()=>{
     interval = setInterval(() => {
         if(peer.id != null){
             clearInterval(interval);
-            if(peer.id != roomOwnerId)
-                conn2Peer(roomOwnerId);
+            if(peer.id == roomOwnerId)
+                interval = setInterval(() => {
+                    sendMessage({
+                        type: 'text',
+                        data: JSON.stringify(tableData.value)
+                    })
+                }, 1000);
         }else{
             console.log("not");
         }
@@ -110,25 +125,76 @@ onMounted(()=>{
 
 })
 
+const enterName = (val)=>{
+    if(peer.id == null)
+        return;
+
+    if(val == '' || val == undefined)
+        return;
+
+    // console.log(val);
+    username.value = val;
+    // conn2Peer(roomOwnerId);
+    conn2Peer(JSON.stringify({
+        id: roomOwnerId,
+        username: '房主'
+    }));
+}
+
+const drawAuthSwitchChange = (val)=>{
+    if(peer.id != roomOwnerId){
+        alert("您不是房主");
+        return;
+    }
+
+    tableData.value.drawAuthSwitch = val;
+}
+
+const draw = (row)=>{
+    sendMessage({
+        type: 'draw',
+        data: row
+    })
+}
+
 const settingChanged = (data)=>{
     // data[0]: rowNum
     // data[1]: colNum
     console.log(data)
+    if(data[0] < 1)
+        data[0] = 1;
+
+    if(data[1] < 1)
+        data[1] = 1;
+    // row 改變
     if(tableData.value.rowName.length < data[0]){
-        tableData.value.rowName.push('新項目');
-        let tempArr = []
-        for(let i = 0 ; i < data[1] ; i++)
-            tempArr.push('');
-        tableData.value.data.push(JSON.parse(JSON.stringify(tempArr)));
+        let nowRowNum = tableData.value.rowName.length;
+        for(let j = nowRowNum ; j < data[0] ; j++){
+            tableData.value.rowName.push('新項目');
+
+            let tempArr = []
+            for(let i = 0 ; i < data[1] ; i++)
+                tempArr.push('');
+            
+            tableData.value.data.push(JSON.parse(JSON.stringify(tempArr)));
+        }
+
     }else{
         tableData.value.rowName = tableData.value.rowName.slice(0, data[0]);
         tableData.value.data = tableData.value.data.slice(0, data[0]);
     }
 
+    // col 改變
     if(tableData.value.colName.length < data[1]){
-        tableData.value.colName.push(`名額${data[1]}`);
-        for(let i = 0 ; i < tableData.value.data.length ; i++)
-            tableData.value.data[i].push('');
+        let nowColNum = tableData.value.colName.length;
+        for(let j = nowColNum ; j < data[1] ; j++){
+            tableData.value.colName.push('新名額');
+
+            for(let i = 0 ; i < tableData.value.data.length ; i++)
+                tableData.value.data[i].push('');
+        }
+
+
     }else{
         tableData.value.colName = tableData.value.colName.slice(0, data[1]);
         for(let i = 0 ; i < tableData.value.data.length ; i++)
@@ -136,10 +202,10 @@ const settingChanged = (data)=>{
     }
     console.log(tableData.value.data);
 
-    sendMessage({
-        type: "text",
-        data: JSON.stringify(tableData.value)
-    })
+    // sendMessage({
+    //     type: "text",
+    //     data: JSON.stringify(tableData.value)
+    // })
 
 }
 
@@ -155,11 +221,19 @@ const dataChange = (row, col, e)=>{
     if(row != -1 && col != -1)
         tableData.value.data[row][col] = e.target.textContent.replace(/\n/gi, "");
 
+    // sendMessage({
+    //     type: "text",
+    //     data: JSON.stringify(tableData.value)
+    // })
+}
+
+watch(tableData.value, (val)=>{
     sendMessage({
         type: "text",
-        data: JSON.stringify(tableData.value)
+        data: JSON.stringify(val)
     })
-}
+
+})
 
 peer.on('connection', function(conn) {
 
@@ -176,12 +250,40 @@ peer.on('connection', function(conn) {
                     break;
 
                 tableData.value = JSON.parse(data['data']);
-                console.log(data['data'])
+                // console.log(data['data'])
                 break;
 
             case 'draw':
-                if(drawAuthSwitch.value == false)
+                if(tableData.value.drawAuthSwitch == false)
                     break;
+
+                // console.log(conn.peer);
+                var drawUsername = '';
+                // var drawUsername = idAndNames.map((item)=>{
+                //     if(item.id == peer.id)
+                //         return item.username;
+                // })
+                // console.log(drawUsername)
+                for(let i = 0 ; i < idAndNames.value.length ; i++){
+                    if(idAndNames.value[i].id == conn.peer){
+                        drawUsername = idAndNames.value[i].username;
+                        break;
+                    }
+                }
+
+                if(haveFiled.includes(conn.peer))
+                    break;
+
+                var row = parseInt(data['data']);
+
+                for(let i = 0 ; i < tableData.value.colName.length ; i++){
+                    if(tableData.value.data[row][i] == ''){
+                        tableData.value.data[row][i] = drawUsername;
+                        haveFiled.push(conn.peer);
+                        break;
+                    }
+                }
+                
 
                 break;
 
@@ -195,20 +297,32 @@ peer.on('connection', function(conn) {
 });
 
 //連接
-function conn2Peer(id){
+function conn2Peer(data){
 
-    if(ids.includes(id))
+    let d = JSON.parse(data);
+    let id = d['id'];
+    let targetUsername = d['username'];
+
+    if(ids.value.includes(id))
         return;
 
     console.log(id);
-    ids.push(id);
+    ids.value.push(id);
     // store.dispatch('addId', {id: id});
+    let tempObj = {
+        id: id,
+        username: targetUsername
+    }
+    idAndNames.value.push(JSON.parse(JSON.stringify(tempObj)))
     var conn = peer.connect(id);
     conn.on('open', function(){
 
         let allIdData = {
             "type": "conn",
-            "data": peer.id
+            "data": JSON.stringify({
+                id: peer.id,
+                username: username.value
+            })
         }
         conn.send(JSON.stringify(allIdData));
 
@@ -283,6 +397,16 @@ table input{
     outline: none;
 }
 
+table .drawButton{
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+table .drawButton:hover{
+    /* cursor: pointer; */
+    outline: 4px solid rgba(255, 150, 100, 1);
+}
+
 .functions{
     position: fixed;
     bottom: 10%;
@@ -328,6 +452,21 @@ table input{
 
 .functions > span > span > i{
     line-height: 36px;
+}
+
+.functions .peopleButton{
+    position: relative;
+}
+
+.functions .peopleButton::before{
+    content: attr(data-num);
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    font-size: 0.6rem;
+    display: block;
+    line-height: 1.6rem;
 }
 
 
