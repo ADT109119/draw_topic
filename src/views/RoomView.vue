@@ -49,7 +49,7 @@ const store = useStore();
 const tableData =ref({
     rowName: ["項目1"],
     colName: ["名額1"],
-    data: [["AA"]],
+    data: [[""]],
     drawAuthSwitch: true,
 })
 
