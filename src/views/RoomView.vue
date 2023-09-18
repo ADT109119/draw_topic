@@ -288,8 +288,11 @@ peer.on('connection', function(conn) {
                 for(let i = 0 ; i < tableData.value.colName.length ; i++){
                     if(tableData.value.data[row][i] == ''){
                         tableData.value.data[row][i] = drawUsername;
-                        haveFiled.push(conn.peer);
-                        break;
+
+                        if(tableData.value.data[row][i] == drawUsername){
+                            haveFiled.push(conn.peer);
+                            break;
+                        }
                     }
                 }
                 
