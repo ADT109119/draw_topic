@@ -22,12 +22,12 @@
         </div>
     </div>
 
-    <sideBar ref="sideBarElement" @change-setting="settingChanged"></sideBar>
+    <sideBar ref="sideBarElement" @change-setting="settingChanged" :membersdata="idAndNames"></sideBar>
 
     <span class="functions">
         <span>
-            <span><i class="material-icons" onclick="document.querySelector('.sidebar').classList.add('active');">settings</i></span>
-            <span class="peopleButton" :data-num="idAndNames.length"><i class="material-icons">people</i></span>
+            <span><i class="material-icons" @click="sideBarElement.changeTab(0)" onclick="document.querySelector('.sidebar').classList.add('active');">settings</i></span>
+            <span class="peopleButton" @click="sideBarElement.changeTab(1)" onclick="document.querySelector('.sidebar').classList.add('active');" :data-num="idAndNames.length"><i class="material-icons">people</i></span>
             <span data-toggle="tooltip" data-tooltip="允許填寫!" @click="drawAuthSwitchChange(true)"><i class="material-icons">check</i></span>
             <span data-toggle="tooltip" data-tooltip="關閉填寫!" @click="drawAuthSwitchChange(false)"><i class="material-icons">not_interested</i></span>
         </span>
@@ -423,7 +423,7 @@ table .drawButton{
 
 table .drawButton:hover{
     /* cursor: pointer; */
-    outline: 4px solid rgba(255, 150, 100, 1);
+    outline: 4px solid var(--yellow);
 }
 
 .functions{
@@ -466,7 +466,7 @@ table .drawButton:hover{
 
 
 .functions > span > span:hover, .functions > span > span.active{
-    background: rgb(255, 210, 50);
+    background: var(--yellow);
 }
 
 .functions > span > span > i{

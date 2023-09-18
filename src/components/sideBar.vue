@@ -7,10 +7,23 @@
                 <div style="text-align: right; padding: 0 1rem;">
                     <span class="closeSidebarButton" @click="closeSideBar">×</span>
                 </div>
-                <hr style="margin: 0;">
+
+                <div class="switcher">
+                    <span :class="mode==0?'active':''" @click="changeTab(0)">設定</span>
+                    <span :class="mode==1?'active':''" @click="changeTab(1)">成員</span>
+                </div>
+
+                <hr style="margin: 0 4px;">
+
                 <div class="content">
-                    <span>列數:</span><input type="number" v-model="rowNum" min="1" @input="changeSetting">
-                    <span>行數:</span><input type="number" v-model="colNum" min="1" @input="changeSetting">
+                    <section class="settingTab" ref="settingTab" :hidden="!mode==0">
+                        <span>列數:</span><input type="number" v-model="rowNum" min="1" @input="changeSetting">
+                        <span>行數:</span><input type="number" v-model="colNum" min="1" @input="changeSetting">
+                    </section>
+
+                    <section class="memberTab" ref="memberTab" :hidden="!mode==1">
+                        <memberList :membersdata="prop.membersdata"></memberList>
+                    </section>
                     
                 </div>
             </div>
@@ -20,11 +33,22 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue';
+import { ref, defineEmits, defineProps, defineExpose } from 'vue';
+import memberList from './memberList.vue';
 
 const sidebar = ref()
 const rowNum = ref(1);
 const colNum = ref(1);
+
+const settingTab = ref()
+const memberTab = ref();
+const mode = ref(0);
+
+const prop = defineProps({
+    membersdata:{
+        type: Array
+    }
+})
 
 const emit = defineEmits(['changeSetting']);
 
@@ -36,6 +60,15 @@ const changeSetting = ()=>{
 const closeSideBar = ()=>{
     sidebar.value.classList.remove("active");
 }
+
+const changeTab = (val)=>{
+    mode.value = val
+}
+
+defineExpose({
+    changeTab
+})
+
 </script>
 
 <style>
@@ -98,9 +131,43 @@ const closeSideBar = ()=>{
 }
 
 .sidebar .content{
+    position: relative;
+}
+
+.sidebar .content .settingTab{
+    position: relative;
     display: grid;
     grid-template-columns: 5rem 1fr;
     padding: 0.5rem;
+}
+
+.sidebar .content .memberTab{
+    position: relative;
+
+}
+
+.sidebar .switcher{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 0 4px;
+}
+
+.sidebar .switcher span{
+    transition: 0.2s;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+}
+
+.sidebar .switcher span.active{
+    background-color: var(--yellow);
+}
+
+.sidebar .switcher span:hover{
+    background-color: rgb(230, 230, 230);
+}
+
+.sidebar .switcher span.active:hover{
+    background-color: var(--yellow);
 }
 
 </style>

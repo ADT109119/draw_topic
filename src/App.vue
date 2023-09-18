@@ -28,6 +28,10 @@ onMounted(()=>{
 
 <style>
 
+:root{
+  --yellow: rgb(255, 210, 50);
+}
+
 body{
   background-color: rgb(250, 250, 250);
 
@@ -53,4 +57,21 @@ nav a {
 nav a.router-link-exact-active {
   color: #42b983;
 }
+
+#app::-webkit-scrollbar{
+    width: 4px;
+}
+
+#app::-webkit-scrollbar-track{
+    background: transparent; 
+}
+
+#app::-webkit-scrollbar-thumb{
+    background: #888; 
+}
+
+#app::-webkit-scrollbar-thumb:hover{
+    background: #555; 
+}
+
 </style>
