@@ -8,8 +8,8 @@
             <div class="title">請輸入名稱</div>
             <hr>
             <div class="input-group" style="margin-top: 1rem;">
-                <input class="username form-control" v-model="inputElement" placeholder="請輸入名稱">
-                <customButton style="--bor:0 4px 4px 0" @click="enterRoom">{{ inputElement==''?'請輸入名稱':'加入房間' }}</customButton>
+                <input class="username form-control" v-model="inputElement" @input="changeButtonContent" placeholder="請輸入名稱">
+                <customButton style="--bor:0 4px 4px 0" @click="enterRoom" v-html="buttonContent"></customButton>
             </div>
         </div>
 
@@ -21,12 +21,23 @@
 import { ref, defineEmits } from 'vue';
 import customButton from './customButton.vue';
 
-const inputElement = ref();
+const inputElement = ref('');
+const buttonContent = ref('請輸入名稱');
+
+// buttonContent.value.className = "spinner-border";
+
+const changeButtonContent = ()=>{
+    buttonContent.value = inputElement.value==''?"請輸入名稱":"加入房間"
+}
 
 const emit = defineEmits(['username']);
 
 const enterRoom = ()=>{
+    if(inputElement.value == '')
+        return;
+        
     emit('username', inputElement.value);
+    buttonContent.value = '<span class="spinner-border spinner-border-sm" style="font-size: 0.6rem"></span>';
 }
 
 </script>

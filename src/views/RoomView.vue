@@ -27,13 +27,13 @@
     <span class="functions">
         <span>
             <span><i class="material-icons" onclick="document.querySelector('.sidebar').classList.add('active');">settings</i></span>
-            <span class="peopleButton" :data-num="ids.length"><i class="material-icons">people</i></span>
+            <span class="peopleButton" :data-num="idAndNames.length"><i class="material-icons">people</i></span>
             <span data-toggle="tooltip" data-tooltip="允許填寫!" @click="drawAuthSwitchChange(true)"><i class="material-icons">check</i></span>
             <span data-toggle="tooltip" data-tooltip="關閉填寫!" @click="drawAuthSwitchChange(false)"><i class="material-icons">not_interested</i></span>
         </span>
     </span>
 
-    <enterNameWindow v-show="peer.id != roomOwnerId && username == ''" @username="enterName"></enterNameWindow>
+    <enterNameWindow v-show="peer.id != roomOwnerId && !roomOwnerConnectBack" @username="enterName"></enterNameWindow>
 
 </template>
 
@@ -60,6 +60,7 @@ const roomOwnerId = route.params.id;
 const peer = store.getters.getPeerjsObj;
 // const drawAuthSwitch = ref(true);
 const username = ref('');
+const roomOwnerConnectBack = ref(false);
 let interval;
 
 const ids = ref([]);
@@ -91,6 +92,11 @@ onMounted(()=>{
                     sendMessage({
                         type: 'text',
                         data: JSON.stringify(tableData.value)
+                    })
+
+                    sendMessage({
+                        type: 'usersList',
+                        data: JSON.stringify(idAndNames.value)
                     })
                 }, 1000);
         }else{
@@ -242,6 +248,9 @@ peer.on('connection', function(conn) {
         // console.log(data);
         switch(data['type']){
             case 'conn':
+                if(conn.peer == roomOwnerId)
+                    roomOwnerConnectBack.value = true;
+
                 conn2Peer(data['data']);
                 break;
 
@@ -286,6 +295,15 @@ peer.on('connection', function(conn) {
                 
 
                 break;
+
+            case 'usersList':
+                if(peer.id == roomOwnerId)
+                    break;
+
+                idAndNames.value = JSON.parse(data['data']);
+                // console.log(data['data'])
+                break;
+
 
             default:
                 break;
@@ -351,6 +369,7 @@ function sendMessage(data){
 
 .container{
     margin-top: 1rem;
+    padding-bottom: 15%;
 }
 
 .tableContainer{
