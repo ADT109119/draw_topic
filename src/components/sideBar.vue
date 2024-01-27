@@ -19,6 +19,7 @@
                     <section class="settingTab" ref="settingTab" :hidden="!mode==0">
                         <span>列數:</span><input type="number" v-model="rowNum" min="1" @input="changeSetting">
                         <span>行數:</span><input type="number" v-model="colNum" min="1" @input="changeSetting">
+                        <CustomButton @click="downloadCsv">下載CSV</CustomButton>
                     </section>
 
                     <section class="memberTab" ref="memberTab" :hidden="!mode==1">
@@ -35,7 +36,10 @@
 <script setup>
 import { ref, defineEmits, defineProps, defineExpose } from 'vue';
 import memberList from './memberList.vue';
+import CustomButton from './customButton.vue';
+import { useStore } from 'vuex';
 
+const store = useStore();
 const sidebar = ref()
 const rowNum = ref(1);
 const colNum = ref(1);
@@ -68,6 +72,49 @@ const changeTab = (val)=>{
 defineExpose({
     changeTab
 })
+
+const buildData = data => {
+
+    return new Promise((resolve) => {
+        let arrayData = [];
+        let arrayTitle = JSON.parse(JSON.stringify(data.colName))
+        arrayTitle.splice(0, 0, "項目");
+        arrayData.push(arrayTitle);
+
+        data['data'].map((row, i) => {
+            let newRow = JSON.parse(JSON.stringify(row))
+            newRow.splice(0, 0, data.rowName[i]);
+            arrayData.push(newRow);
+        });
+
+        console.log(arrayData);
+
+        resolve(arrayData);
+    })
+
+}
+
+const downloadCSV = data => {
+    let csvContent = '';
+    data.map(d => {
+        let dataString = d.join(',') + '\n';
+        csvContent += dataString;
+    })
+
+    console.log(csvContent);
+
+    let fileName = '搶籤資料_' + (new Date()).getTime() + '.csv';
+
+    let link = document.createElement('a');
+    link.setAttribute('href', 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURI(csvContent));
+    link.setAttribute('download', fileName);
+    link.click();
+}
+
+const downloadCsv = ()=>{
+    buildData(store.getters.getData).then(data=>{downloadCSV(data)})
+    // console.log(store.getters.getData);
+}
 
 </script>
 

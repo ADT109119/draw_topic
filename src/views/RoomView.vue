@@ -72,6 +72,7 @@ onMounted(()=>{
 
     ids.value = [];
     conns = [];
+    store.dispatch("setData", tableData.value);
 
     // setTimeout(()=>{
     //     console.log(peer.id);
@@ -166,7 +167,7 @@ const draw = (row)=>{
 const settingChanged = (data)=>{
     // data[0]: rowNum
     // data[1]: colNum
-    console.log(data)
+    // console.log(data)
     if(data[0] < 1)
         data[0] = 1;
 
@@ -206,7 +207,7 @@ const settingChanged = (data)=>{
         for(let i = 0 ; i < tableData.value.data.length ; i++)
             tableData.value.data[i] = tableData.value.data[i].slice(0, data[1]);
     }
-    console.log(tableData.value.data);
+    // console.log(tableData.value.data);
 
     // sendMessage({
     //     type: "text",
@@ -238,7 +239,7 @@ watch(tableData.value, (val)=>{
         type: "text",
         data: JSON.stringify(val)
     })
-
+    store.dispatch("setData", tableData.value);
 })
 
 peer.on('connection', function(conn) {
@@ -355,7 +356,7 @@ function conn2Peer(data){
 //傳資料
 function sendMessage(data){
 
-    console.log(data)
+    // console.log(data)
     data = JSON.stringify(data);
 
     conns.forEach((conn)=>{
