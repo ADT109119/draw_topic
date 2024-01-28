@@ -30,10 +30,12 @@
             <span class="peopleButton" @click="sideBarElement.changeTab(1)" onclick="document.querySelector('.sidebar').classList.add('active');" :data-num="idAndNames.length"><i class="material-icons">people</i></span>
             <span data-toggle="tooltip" data-tooltip="允許填寫!" @click="drawAuthSwitchChange(true)"><i class="material-icons">check</i></span>
             <span data-toggle="tooltip" data-tooltip="關閉填寫!" @click="drawAuthSwitchChange(false)"><i class="material-icons">not_interested</i></span>
+            <span data-toggle="tooltip" data-tooltip="顯示 QR Code" @click="passUrlToQrCode"><i class="material-icons">qr_code</i></span>
         </span>
     </span>
 
     <enterNameWindow v-show="peer.id != roomOwnerId && !roomOwnerConnectBack" @username="enterName"></enterNameWindow>
+    <QrcodeDisplayWindow :url="nowUrl"></QrcodeDisplayWindow>
 
 </template>
 
@@ -43,6 +45,7 @@ import { useRoute } from 'vue-router';
 import { useStore } from 'vuex';
 import sideBar from '@/components/sideBar.vue';
 import enterNameWindow from '@/components/enterNameWindow.vue';
+import QrcodeDisplayWindow from '@/components/qrcodeDisplayWindow.vue';
 
 const route = useRoute();
 const store = useStore();
@@ -365,6 +368,12 @@ function sendMessage(data){
 
     });
 
+}
+
+const nowUrl = ref("");
+const passUrlToQrCode = ()=>{
+    nowUrl.value = encodeURIComponent(location.href);
+    document.querySelector('.qrcodeDisplayWindowConatiner').classList.remove('close')
 }
 
 </script>
